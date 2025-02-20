@@ -8,10 +8,24 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect(process.env.MONGO_URI, {useNewUrlParser: true, useUnifieldTopology: true});
+mongoose.connect(process.env.MONGO_URI, {useNewUrlParser: true});
 
-app.get("/", (req,res)=> {
-    res.send("News Aggregator API is running...");
+app.get("/news", async(req,res)=> {
+    // res.send("News Aggregator API is running...");
+    try{
+        const { query, page = 1} =  req.query;
+        const response = await axios.get("https://newsapi.org/v2/top-headlines", {
+            params: {
+                q: query || "latest",
+                pageSize: 5,
+                page,
+                apiKey: process.env.NEWS_API_KEY
+            }
+        });
+        res.json(response.data.articles);
+    } catch (error) {
+        res.status(500),json({ error: "Error fetching news"});
+    }
 
 });
 
